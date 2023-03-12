@@ -1,0 +1,71 @@
+function Aimbot()
+    local target = FindTarget()
+    if target ~= nil then
+        AimAt(target)
+    end
+end
+
+function FindTarget()
+    local targets = GetTargets()
+    local closestTarget = nil
+    local closestDist = math.huge
+    for i, target in ipairs(targets) do
+        local dist = GetDistance(target)
+        if dist < closestDist then
+            closestTarget = target
+            closestDist = dist
+        end
+    end
+    return closestTarget
+end
+
+function AimAt(target)
+    -- Get the player's camera and character
+    local camera = game.Workspace.CurrentCamera
+    local character = game.Players.LocalPlayer.Character
+
+    -- Calculate the target's position in relation to the player's camera
+    local targetPosition = target.Character.Head.Position
+    local targetRelativePosition = camera.CFrame:PointToObjectSpace(targetPosition)
+
+    -- Calculate the angle between the player's camera and the target
+    local pitchAngle = math.asin(targetRelativePosition.Y / targetRelativePosition.Magnitude)
+    local yawAngle = math.atan2(-targetRelativePosition.X, -targetRelativePosition.Z)
+
+    -- Set the camera's CFrame to aim at the target
+    camera.CFrame = CFrame.new(camera.CFrame.Position) * CFrame.Angles(pitchAngle, yawAngle, 0)
+
+    -- Set the player's character's look direction to match the camera
+    character:SetPrimaryPartCFrame(CFrame.new(character.PrimaryPart.Position, character.PrimaryPart.Position + camera.CFrame.LookVector))
+end
+
+function GetTargets()
+    -- Get all the players in the game
+    local players = game.Players:GetPlayers()
+
+    -- Create an empty list to store the targets
+    local targets = {}
+
+    -- Loop through all the players
+    for _, player in pairs(players) do
+        -- Check if the player is alive and not the local player
+        if player.Character and player.Character.Humanoid.Health > 0 and player ~= game.Players.LocalPlayer then
+            -- Add the player to the list of targets
+            table.insert(targets, player)
+        end
+    end
+
+    -- Return the list of targets
+    return targets
+end
+
+function GetDistance(target)
+    local character = game.Players.LocalPlayer.Character
+    local targetCharacter = target.Character
+
+    if character and targetCharacter then
+        return (character.PrimaryPart.Position - targetCharacter.PrimaryPart.Position).Magnitude
+    else
+        return nil
+    end
+end
